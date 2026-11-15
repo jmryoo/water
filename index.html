@@ -1,9 +1,39 @@
-<html>
-  <head>
-    <title>Water</title>
-  </head>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iWater</title>
+<style>
+:root{--bg:#0d1b3a;--card:#f3ead8;--cardfg:#1b2a4a;--cardmuted:#6b6250;--fg:#f2f5fb;--muted:#a9b8d6;--border:#24407a;--accent:#f5b14a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 20% -10%,#1a3570 0%,transparent 60%),var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:720px;margin:0 auto;padding:80px 20px}
+h1{font-size:40px;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 40px}
+.list{display:grid;gap:12px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--cardfg);border-color:#e2d6bd;text-decoration:none;transition:border-color .15s,transform .15s}
+.item:hover{border-color:var(--accent);background:#f8f1e3;transform:translateY(-1px)}
+h1::after{content:"";display:block;width:120px;height:3px;border-radius:2px;background:var(--accent);margin-top:14px}
+.item b{display:block;font-weight:600}
+.item span{color:var(--cardmuted);font-size:14px}
+.item svg{flex:none;width:18px;height:18px;color:#c98a1e}
+</style>
+</head>
+<body>
+<main>
+  <h1>iWater</h1>
+  <p class="sub">Interactive research pages</p>
 
-  <body>
-    <a href="seasonal_outlook/enso_rwb_explorer_NMME.html">ENSO RWB Explorer</a>
-  </body>
+  <div class="list">
+    <a class="item" href="seasonal_outlook/enso_rwb_explorer_NMME.html">
+      <div>
+        <b>ENSO RWB Explorer</b>
+        <span>ENSO, Rossby wave breaking &amp; West Coast winter rain</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</main>
+</body>
 </html>
