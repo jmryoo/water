@@ -1,0 +1,392 @@
+<title>Debris-Flow Model Evaluation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column, plain-language sections, each chart paired with a one-line takeaway. */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --ink:#1b2428; --ink2:#46545b; --muted:#6c7a80; --rule:#dbe0de;
+  --accent:#1f5f8b; --accent-soft:#dcebf4; --warn:#b4531c; --warn-soft:#f8e6da; --gray-bar:#9aa8ae; --grid:#e3e7e5; --ml:#7b5ea7;
+  --serif:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --sans:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12181b; --surface:#1a2226; --ink:#e8eeef; --ink2:#b4c1c6; --muted:#8a999f; --rule:#2b363b;
+  --accent:#6fb4e0; --accent-soft:#1d3342; --warn:#f09a63; --warn-soft:#3a281c; --gray-bar:#62737a; --grid:#273136; --ml:#b79be0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181b; --surface:#1a2226; --ink:#e8eeef; --ink2:#b4c1c6; --muted:#8a999f; --rule:#2b363b;
+  --accent:#6fb4e0; --accent-soft:#1d3342; --warn:#f09a63; --warn-soft:#3a281c; --gray-bar:#62737a; --grid:#273136; --ml:#b79be0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);padding-block:28px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1,h2{font-family:var(--serif);font-weight:650;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.7rem,5vw,2.2rem);letter-spacing:-.025em}
+h2{font-size:1.2rem;letter-spacing:-.01em}
+h3{font-size:1rem;margin:0 0 4px;font-weight:600}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.lede{font-size:1.02rem;color:var(--ink2);max-width:62ch}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.caution{background:var(--warn-soft);border:1px solid var(--warn);border-radius:6px;padding:14px 16px;color:var(--ink)}
+.caution b{color:var(--warn)}
+.findings{display:grid;gap:12px}
+.finding{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;min-width:0}
+.finding .big{font-family:var(--serif);font-size:1.15rem;font-weight:650;margin-bottom:4px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.take{font-weight:500}
+.sub{color:var(--ink2);font-size:.92rem}
+.small{color:var(--muted);font-size:.85rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.rows{display:flex;flex-direction:column;gap:7px}
+.row{display:grid;grid-template-columns:minmax(0,11.5rem) minmax(0,1fr) 3.4rem;gap:10px;align-items:center;font-size:.88rem}
+.row .lab{color:var(--ink2);line-height:1.25}
+.track{position:relative;height:16px}
+.bar{height:100%;border-radius:0 4px 4px 0;min-width:2px}
+.val{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+.refline{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--ink)}
+.axis{display:grid;grid-template-columns:minmax(0,11.5rem) minmax(0,1fr) 3.4rem;gap:10px;font-size:.78rem;color:var(--muted)}
+.axis .scale{position:relative;height:1.1em}
+.axis .scale span{position:absolute;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--ink2);font-family:var(--sans)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--ink2);font-size:.8rem}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:1px 7px;border-radius:3px;white-space:nowrap}
+.tag.bad{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--accent-soft);color:var(--accent)}
+.tag.na{background:var(--grid);color:var(--ink2)}
+dl{margin:0;display:grid;gap:12px}
+dt{font-weight:600}
+dd{margin:2px 0 0;color:var(--ink2)}
+ul{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:6px}
+a{color:var(--accent)}
+@media(min-width:640px){.findings{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.row,.axis{grid-template-columns:minmax(0,1fr) 3rem}.row .lab{grid-column:1/-1}.row .track{grid-column:1}.axis>span:first-child{display:none}.axis .scale{grid-column:1}}
+
+.panel{display:flex;flex-direction:column;gap:30px;min-width:0}
+.panel[hidden]{display:none}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);overflow-x:auto;margin-top:6px}
+.tabs button{font:inherit;font-weight:600;font-size:.95rem;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;color:var(--ink2);padding:10px 14px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px}
+.dots{display:flex;flex-direction:column;gap:14px}
+.dotrow{display:flex;flex-direction:column;gap:5px;font-size:.88rem}
+.dotrow .lab{color:var(--ink2)}.dotrow .lab b{color:var(--ink);font-weight:600}
+.dtrack{position:relative;height:22px;border-bottom:1px solid var(--rule)}
+.dtrack:before{content:"";position:absolute;left:0;right:0;top:11px;border-top:1px solid var(--grid)}
+.mk{position:absolute;top:3px;width:14px;height:14px;margin-left:-7px}
+.mk.act{background:var(--ink);transform:rotate(45deg) scale(.78);border-radius:2px}
+.mk.pub{background:var(--warn);border-radius:50%}
+.mk.rec{background:var(--accent);border-radius:2px}
+.mk.ml{background:var(--ml);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.dax{position:relative;height:1.1em;font-size:.78rem;color:var(--muted)}
+.dax span{position:absolute;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.lg i.act{background:var(--ink);transform:rotate(45deg) scale(.8)}.lg i.pub{border-radius:50%;background:var(--warn)}.lg i.rec{background:var(--accent)}.lg i.ml{background:var(--ml);clip-path:polygon(50% 0,100% 100%,0 100%)}
+table.wide{min-width:640px;font-size:.8rem}
+table.wide th,table.wide td{padding:6px 5px}
+table.wide th{font-size:.74rem}
+td.best,th.best{white-space:normal}
+td.best .tag{white-space:normal}
+tr.grp th{text-align:center;border-bottom:0;padding-bottom:0}
+.hl td{background:var(--accent-soft)}
+.fold{background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.fold>summary{padding:13px 16px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"+";font-family:var(--mono);color:var(--muted)}
+.fold[open]>summary::after{content:"\2212"}
+.fold[open]>summary{border-bottom:1px solid var(--rule)}
+.fold .in{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.stats{display:grid;gap:12px}
+@media(min-width:640px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stat{border:1px solid var(--rule);border-radius:12px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat .n{font-size:2.4rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat .t{color:var(--ink2);font-size:.9rem;line-height:1.35}
+.card .take{font-size:1.02rem;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.05rem}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <div class="eyebrow">Post-fire debris flows &middot; Model report card</div>
+  <h1>Debris-Flow Model Evaluation</h1>
+  <p class="lede">How well do the models predict debris flows? Tested on 77 past fires.</p>
+  <nav class="tabs" role="tablist" aria-label="Report sections">
+    <button role="tab" id="t-overall" aria-selected="true" aria-controls="p-overall">Overall results</button>
+    <button role="tab" id="t-fires" aria-selected="false" aria-controls="p-fires">Validation with actual fires</button>
+  </nav>
+</header>
+
+<div class="panel" id="p-overall" role="tabpanel" aria-labelledby="t-overall">
+
+<div class="stats">
+  <div class="stat"><span class="n">0.88</span><span class="t">The USGS formula ranks risk well (AUC)</span></div>
+  <div class="stat"><span class="n">40%</span><span class="t">Debris flows when it said 90%+. Raw percentages run high.</span></div>
+  <div class="stat"><span class="n">0</span><span class="t">Machine-learning models that beat the rescaled formula</span></div>
+</div>
+
+<section>
+  <h2>Percentages</h2>
+  <div class="card">
+    <p class="take">Rescaled forecasts match reality. Published ones run high.</p>
+    <div id="rel"></div>
+    <div class="legend"><span><i style="background:var(--warn)"></i>USGS M1 as published</span><span><i style="background:var(--accent)"></i>Recalibrated M1</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Error vs. a simple guess</h2>
+  <div class="card">
+    <p class="take">Only the rescaled formula clearly beats guessing the average.</p>
+    <div class="rows" id="brier"></div>
+    <div class="axis"><span></span><div class="scale" id="brierScale"></div><span></span></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Better</span><span><i style="background:var(--gray-bar)"></i>Same</span><span><i style="background:var(--warn)"></i>Worse</span></div>
+    <p class="small">Brier score, lower is better. Dashed line: always guess the average.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Satellite vs. gauge rain</h2>
+  <div class="card">
+    <p class="take">Satellite rain is not ready: ranking skill drops from 0.87 to about 0.6.</p>
+    <div class="rows" id="auc"></div>
+    <div class="axis"><span></span><div class="scale" id="aucScale"></div><span></span></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Rain gauge</span><span><i style="background:var(--warn)"></i>NASA IMERG</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Details</h2>
+  <div class="stack">
+  <details class="fold"><summary>How we tested</summary><div class="in"><p class="sub">USGS inventory: 7,639 storms from 77 fires, each marked debris flow or not. Every model is graded on a fire it never saw (leave-one-fire-out). Model comparison uses the 20 fires with NASA coverage.</p></div></details>
+
+  <details class="fold"><summary>Is the gap real?</summary><div class="in"><div class="tw"><table><thead><tr><th>Model</th><th class="n">Extra error vs. recalibrated M1</th><th class="n">95% range</th><th>Verdict</th></tr></thead><tbody id="boot"></tbody></table></div></div></details>
+
+  <details class="fold"><summary>What satellite data adds</summary><div class="in"><div class="rows" id="abl"></div><div class="axis"><span></span><div class="scale" id="ablScale"></div><span></span></div><p class="small">Error added when one input group is removed. Soil moisture matters most, but the ML model still loses to the rescaled formula.</p></div></details>
+
+  <details class="fold"><summary>HLS burn-severity pilot</summary><div class="in"><div class="tw"><table>
+      <thead><tr><th>Fire</th><th class="n">AUC with USGS burn inputs</th><th class="n">AUC with HLS inputs</th><th>Reading</th></tr></thead>
+      <tbody>
+        <tr><td>Dolan</td><td class="n">0.889</td><td class="n">0.880</td><td><span class="tag ok">Nearly the same</span></td></tr>
+        <tr><td>Thomas</td><td class="n">0.688</td><td class="n">0.622</td><td><span class="tag bad">Lower</span></td></tr>
+      </tbody>
+    </table></div><p class="small">Two fires only. Not a validated result.</p></div></details>
+
+  <details class="fold"><summary>Limits</summary><div class="in"><ul><li>Eaton and Palisades are untested.</li><li>A few big fires dominate the inventory.</li><li>Rescaling is fitted to past fires, mostly western U.S.</li></ul></div></details>
+
+  <details class="fold"><summary>Glossary</summary><div class="in"><dl><dt>Brier score</dt><dd>Average squared miss. Lower is better.</dd><dt>AUC</dt><dd>How often a debris-flow storm outranks a quiet one. 0.5 is a coin flip.</dd><dt>Recalibrated</dt><dd>Same formula, output rescaled to past outcomes.</dd></dl></div></details>
+
+  <details class="fold"><summary>Sources</summary><div class="in"><p class="sub">USGS Post-Fire Debris-Flow Inventory &middot; NASA IMERG, SMAP, HLS &middot; NASADEM &middot; SSURGO &middot; NOAA RONI. Our own analysis; not peer reviewed.</p></div></details>
+
+  </div>
+</section>
+
+</div>
+
+<div class="panel" id="p-fires" role="tabpanel" aria-labelledby="t-fires" hidden>
+
+<div class="stats">
+  <div class="stat"><span class="n">22 of 28</span><span class="t">Fires where rescaled or ML beat published M1</span></div>
+  <div class="stat"><span class="n">2&ndash;4&times;</span><span class="t">Typical gap between forecast and actual rate on a new fire</span></div>
+  <div class="stat"><span class="n">0</span><span class="t">Fires tested like Eaton or Palisades. Neither is in the inventory.</span></div>
+</div>
+
+<section>
+  <h2>Forecast vs. what happened</h2>
+  <div class="card">
+    <p class="take">Published M1 forecast too many debris flows on most fires.</p>
+    <div class="dots" id="dots"></div>
+    <div class="dax" id="dax"></div>
+    <div class="legend lg"><span><i class="act"></i>What happened</span><span><i class="pub"></i>Published M1</span><span><i class="rec"></i>Rescaled M1</span><span><i class="ml"></i>ML</span></div>
+    <p class="small">Each model&rsquo;s average forecast on a fire it never saw.</p>
+  </div>
+</section>
+
+<section>
+  <h2>How close are the percentages?</h2>
+  <div class="card">
+    <p class="take">Trust the ranking more than the percentage.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Model</th><th class="n">Within 2× of actual</th><th class="n">Within 3×</th><th class="n">Within 4×</th><th class="n">More than 2× too high</th><th class="n">More than 2× too low</th></tr></thead>
+      <tbody>
+        <tr><td>Published M1</td><td class="n">24%</td><td class="n">52%</td><td class="n">60%</td><td class="n">76%</td><td class="n">0%</td></tr>
+        <tr><td>Rescaled M1</td><td class="n">44%</td><td class="n">72%</td><td class="n">84%</td><td class="n">40%</td><td class="n">16%</td></tr>
+        <tr><td>ML</td><td class="n">40%</td><td class="n">72%</td><td class="n">88%</td><td class="n">36%</td><td class="n">24%</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small">Share of 25 fires where the model&rsquo;s forecast landed within 2&times;, 3&times; or 4&times; of the actual rate.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Details</h2>
+  <div class="stack">
+  <details class="fold"><summary>All fires with 30+ storms</summary><div class="in"><div class="tw"><table class="wide" id="ftab"></table></div><p class="small">Brier score, lower is better. &ldquo;Guess&rdquo; always says the average. Dixie (2021) has only 22 storms and is left out.</p></div></details>
+
+  <details class="fold"><summary>Why published numbers run high</summary><div class="in"><p class="sub">Published M1 matches the 2003&ndash;2009 California fires it was built from, then runs about 3&times; too high on later ones.</p><div class="tw"><table>
+      <thead><tr><th>Storms</th><th class="n">Records</th><th class="n">Average published forecast</th><th class="n">Debris flows that happened</th></tr></thead>
+      <tbody>
+        <tr><td>California, fires 2003–2009</td><td class="n">817</td><td class="n">24.6%</td><td class="n">24.6%</td></tr>
+        <tr><td>California, fires 2014–2022</td><td class="n">2,028</td><td class="n">45.4%</td><td class="n">15.2%</td></tr>
+        <tr><td>Outside California</td><td class="n">4,794</td><td class="n">34.8%</td><td class="n">9.3%</td></tr>
+      </tbody>
+    </table></div></div></details>
+
+  <details class="fold"><summary>Limits</summary><div class="in"><ul><li>No per-catchment record exists for Eaton or Palisades.</li><li>Published M1 has a head start on 2003&ndash;2009 fires such as Station.</li><li>One fire is a small test; scores swing.</li><li>30-minute rain only.</li></ul></div></details>
+
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+(function(){
+  var css=function(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()};
+  var el=function(id){return document.getElementById(id)};
+
+  // ---- bar charts ----
+  function bars(id,scaleId,data,max,ticks,fmt,opts){
+    opts=opts||{};
+    var host=el(id),sc=el(scaleId),h='';
+    data.forEach(function(d){
+      var w=Math.max(0,d.v)/max*100;
+      h+='<div class="row" title="'+d.l+': '+fmt(d.v)+'"><div class="lab">'+d.l+'</div><div class="track">'
+        +'<div class="bar" style="width:'+w+'%;background:var(--'+d.c+')"></div>'
+        +(opts.ref!=null?'<div class="refline" style="left:'+opts.ref/max*100+'%"></div>':'')
+        +'</div><div class="val">'+fmt(d.v)+'</div></div>';
+    });
+    host.innerHTML=h;
+    sc.innerHTML=ticks.map(function(t){return '<span style="left:'+t/max*100+'%">'+t.toFixed(opts.td==null?2:opts.td)+'</span>'}).join('');
+  }
+  var base=0.0812;
+  var brier=[
+    ['Recalibrated M1',0.0646],['Logistic: M1 + soil type + season',0.0652],['Logistic: M1 + SMAP soil moisture',0.0669],
+    ['Logistic: burn + satellite',0.0772],['Average guess (reference)',0.0812],['Boosted: all inputs',0.0823],['Logistic: burn + gauge rain',0.0849],
+    ['Boosted: burn + gauge rain',0.1123],['Boosted: burn + satellite',0.1136],['USGS M1 as published',0.1968]
+  ].map(function(r){var c=r[1]<0.0775?'accent':(r[1]<0.0865?'gray-bar':'warn');if(r[0].indexOf('reference')>0)c='gray-bar';return{l:r[0],v:r[1],c:c}});
+  bars('brier','brierScale',brier,0.2,[0,0.05,0.10,0.15,0.20],function(v){return v.toFixed(3)},{ref:base});
+
+  bars('auc','aucScale',[
+    {l:'30-min rain, gauge, rescaled',v:0.870,c:'accent'},
+    {l:'30-min rain, IMERG, as published',v:0.652,c:'warn'},
+    {l:'30-min rain, IMERG, rescaled',v:0.553,c:'warn'},
+    {l:'60-min rain, gauge, rescaled',v:0.867,c:'accent'},
+    {l:'60-min rain, IMERG, as published',v:0.654,c:'warn'},
+    {l:'60-min rain, IMERG, rescaled',v:0.556,c:'warn'}
+  ],1,[0,0.25,0.5,0.75,1],function(v){return v.toFixed(2)},{ref:0.5});
+
+  bars('abl','ablScale',[
+    {l:'Remove SMAP soil moisture',v:0.0211,c:'accent'},
+    {l:'Remove gauge rain',v:0.0114,c:'accent'},
+    {l:'Remove IMERG satellite rain',v:0.0067,c:'accent'},
+    {l:'Remove burn severity',v:0.0031,c:'accent'},
+    {l:'Remove USGS M1 score',v:0.0005,c:'accent'},
+    {l:'Remove season',v:0,c:'gray-bar'}
+  ],0.025,[0,0.005,0.010,0.015,0.020,0.025],function(v){return v>0?'+'+v.toFixed(3):'−0.004'},{td:3});
+
+  // ---- bootstrap table ----
+  var boot=[
+    ['USGS M1 as published',0.127,0.075,0.187],
+    ['Average guess',0.016,0.004,0.034],
+    ['Boosted: burn + satellite',0.045,0.015,0.098],
+    ['Boosted: M1 + SMAP',0.016,0.007,0.028],
+    ['Logistic: burn + satellite',0.012,0.004,0.020],
+    ['Boosted: burn + gauge rain',0.042,-0.003,0.140],
+    ['Logistic: burn + gauge rain',0.018,-0.006,0.065],
+    ['Boosted: all inputs',0.016,-0.004,0.051],
+    ['Logistic: M1 + SMAP',0.002,-0.002,0.007],
+    ['Logistic: M1 + soil type + season',0.0004,-0.003,0.005]
+  ];
+  var s=function(v){return (v>=0?'+':'−')+Math.abs(v).toFixed(3)};
+  el('boot').innerHTML=boot.map(function(r){
+    var clear=r[2]>0, near=Math.abs(r[1])<0.003;
+    var tag=clear?'<span class="tag bad">Clearly worse</span>':(near?'<span class="tag ok">About equal</span>':'<span class="tag na">Unclear</span>');
+    return '<tr><td>'+r[0]+'</td><td class="n">'+s(r[1])+'</td><td class="n">'+s(r[2])+' to '+s(r[3])+'</td><td>'+tag+'</td></tr>';
+  }).join('');
+
+  // ---- reliability chart ----
+  var raw=[[.056,.009,2662],[.141,.038,1235],[.246,.078,638],[.346,.137,422],[.447,.158,322],[.547,.149,275],[.654,.213,249],[.753,.185,243],[.856,.201,283],[.979,.404,1310]];
+  var rec=[[.061,.048,5255],[.138,.184,1258],[.243,.298,392],[.346,.364,228],[.446,.5,170],[.542,.547,95],[.643,.623,53],[.75,.475,59],[.856,.558,129]];
+  function rel(){
+    var W=640,H=400,L=52,R=16,T=14,B=48,pw=W-L-R,ph=H-T-B;
+    var X=function(v){return L+v*pw},Y=function(v){return T+(1-v)*ph};
+    var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Forecast probability versus observed debris-flow frequency, for published and recalibrated M1">';
+    [0,.2,.4,.6,.8,1].forEach(function(t){
+      g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" stroke="'+css('--grid')+'"/>';
+      g+='<text x="'+(L-8)+'" y="'+(Y(t)+4)+'" text-anchor="end" font-size="12">'+Math.round(t*100)+'%</text>';
+      g+='<text x="'+X(t)+'" y="'+(H-B+18)+'" text-anchor="middle" font-size="12">'+Math.round(t*100)+'%</text>';
+    });
+    g+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(1)+'" y2="'+Y(1)+'" stroke="'+css('--muted')+'" stroke-dasharray="5 4" stroke-width="1.5"/>';
+    g+='<text x="'+X(.5)+'" y="'+(H-8)+'" text-anchor="middle" font-size="12">Forecast probability</text>';
+    g+='<text transform="translate(14 '+(T+ph/2)+') rotate(-90)" text-anchor="middle" font-size="12">Debris flows that happened</text>';
+    function series(d,col,name){
+      var p=d.map(function(r){return X(r[0])+','+Y(r[1])}).join(' ');
+      var o='<polyline points="'+p+'" fill="none" stroke="'+col+'" stroke-width="2"/>';
+      d.forEach(function(r){o+='<circle cx="'+X(r[0])+'" cy="'+Y(r[1])+'" r="5" fill="'+col+'" stroke="'+css('--surface')+'" stroke-width="2"><title>'+name+': forecast '+Math.round(r[0]*100)+'%, observed '+(r[1]*100).toFixed(0)+'% ('+r[2].toLocaleString()+' storms)</title></circle>'});
+      return o;
+    }
+    g+=series(raw,css('--warn'),'Published M1')+series(rec,css('--accent'),'Recalibrated');
+    g+='<text x="'+(X(.96)-8)+'" y="'+(Y(.404)+22)+'" text-anchor="end" font-size="12.5" style="fill:'+css('--warn')+'">Said ~98%, got 40%</text>';
+    g+='<text x="'+(X(.30))+'" y="'+(Y(.60))+'" text-anchor="end" font-size="12.5" style="fill:'+css('--accent')+'">Rescaled: tracks the diagonal</text>';
+    g+='</svg>';
+    el('rel').innerHTML=g;
+  }
+  rel();
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rel)}catch(e){}
+  new MutationObserver(rel).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+<script>
+(function(){
+  var FIRES=[{"f":"Grizzly Creek","y":2020,"st":"CO","n":1426,"r":0.0281,"pm":0.1399,"rm":0.0795,"mm":0.0481,"bb":0.0414,"bp":0.0534,"br":0.024,"bm":0.022},{"f":"Thomas","y":2017,"st":"CA","n":857,"r":0.1995,"pm":0.5912,"rm":0.2298,"mm":0.2776,"bb":0.1669,"bp":0.2981,"br":0.1186,"bm":0.1372},{"f":"Buzzard","y":2018,"st":"NM","n":679,"r":0.0383,"pm":0.2013,"rm":0.0851,"mm":0.0768,"bb":0.0458,"bp":0.0893,"br":0.03,"bm":0.0324},{"f":"Tadpole","y":2020,"st":"NM","n":648,"r":0.0247,"pm":0.3136,"rm":0.1141,"mm":0.1169,"bb":0.036,"bp":0.1754,"br":0.0246,"bm":0.0335},{"f":"Pinal","y":2017,"st":"AZ","n":525,"r":0.0267,"pm":0.3528,"rm":0.1314,"mm":0.1293,"bb":0.037,"bp":0.2157,"br":0.0415,"bm":0.0433},{"f":"Station","y":2009,"st":"CA","n":477,"r":0.2264,"pm":0.2366,"rm":0.072,"mm":0.1079,"bb":0.187,"bp":0.1253,"br":0.1836,"bm":0.1523},{"f":"Ferguson","y":2018,"st":"CA","n":364,"r":0.0714,"pm":0.225,"rm":0.0792,"mm":0.1042,"bb":0.0694,"bp":0.0814,"br":0.0549,"bm":0.0499},{"f":"Fish","y":2016,"st":"CA","n":241,"r":0.029,"pm":0.1736,"rm":0.0718,"mm":0.0619,"bb":0.0379,"bp":0.0806,"br":0.0276,"bm":0.0262},{"f":"Elk","y":2024,"st":"WY","n":180,"r":0.0833,"pm":0.256,"rm":0.088,"mm":0.0581,"bb":0.0782,"bp":0.1106,"br":0.0684,"bm":0.0676},{"f":"Hermits Peak - Calf Canyon","y":2022,"st":"NM","n":162,"r":0.0926,"pm":0.5422,"rm":0.3659,"mm":0.2925,"bb":0.0851,"bp":0.3654,"br":0.2239,"bm":0.1454},{"f":"Calwood","y":2020,"st":"CO","n":158,"r":0.0,"pm":0.1664,"rm":0.0701,"mm":0.0428,"bb":0.0162,"bp":0.066,"br":0.006,"bm":0.0056},{"f":"Coal Seam","y":2002,"st":"CO","n":145,"r":0.1172,"pm":0.2602,"rm":0.0825,"mm":0.0807,"bb":0.1036,"bp":0.1336,"br":0.0975,"bm":0.0916},{"f":"Butte","y":2015,"st":"CA","n":123,"r":0.0569,"pm":0.3191,"rm":0.1036,"mm":0.137,"bb":0.0584,"bp":0.1649,"br":0.0496,"bm":0.057},{"f":"Dolan","y":2020,"st":"CA","n":118,"r":0.3475,"pm":0.7248,"rm":0.2118,"mm":0.3469,"bb":0.278,"bp":0.4035,"br":0.213,"bm":0.2141},{"f":"Valley","y":2015,"st":"CA","n":117,"r":0.0,"pm":0.3775,"rm":0.1043,"mm":0.09,"bb":0.016,"bp":0.2084,"br":0.0134,"bm":0.0138},{"f":"Schultz","y":2010,"st":"AZ","n":109,"r":0.2752,"pm":0.6389,"rm":0.3702,"mm":0.3129,"bb":0.2228,"bp":0.2855,"br":0.1256,"bm":0.1071},{"f":"Medano","y":2010,"st":"CO","n":100,"r":0.1,"pm":0.2136,"rm":0.1037,"mm":0.0933,"bb":0.0906,"bp":0.0368,"br":0.0328,"bm":0.0196},{"f":"Cub Creek 2","y":2021,"st":"WA","n":95,"r":0.1895,"pm":0.387,"rm":0.0985,"mm":0.101,"bb":0.1579,"bp":0.2216,"br":0.1569,"bm":0.1546},{"f":"Briceburg","y":2019,"st":"CA","n":84,"r":0.0357,"pm":0.2196,"rm":0.0765,"mm":0.0996,"bb":0.0425,"bp":0.0739,"br":0.0292,"bm":0.0306},{"f":"Grand Prix - Old","y":2003,"st":"CA","n":78,"r":0.7692,"pm":0.5807,"rm":0.1448,"mm":0.2161,"bb":0.6018,"bp":0.2358,"br":0.5587,"bm":0.4681},{"f":"Whitewater-Baldy","y":2012,"st":"NM","n":71,"r":1.0,"pm":0.8423,"rm":0.4051,"mm":0.3993,"bb":0.7809,"bp":0.0785,"br":0.4578,"bm":0.3934},{"f":"East Troublesome","y":2020,"st":"CO","n":64,"r":0.1719,"pm":0.3039,"rm":0.0892,"mm":0.0766,"bb":0.1446,"bp":0.2018,"br":0.1474,"bm":0.1515},{"f":"Little Bear","y":2012,"st":"NM","n":47,"r":0.6383,"pm":0.7311,"rm":0.3232,"mm":0.2945,"bb":0.4981,"bp":0.2542,"br":0.3953,"bm":0.344},{"f":"Witch","y":2007,"st":"CA","n":46,"r":0.0217,"pm":0.0448,"rm":0.0468,"mm":0.0133,"bb":0.032,"bp":0.0195,"br":0.0213,"bm":0.0204},{"f":"Flag","y":2021,"st":"AZ","n":40,"r":0.05,"pm":0.4317,"rm":0.1716,"mm":0.1784,"bb":0.0531,"bp":0.2495,"br":0.0732,"bm":0.0619},{"f":"Gladiator","y":2012,"st":"AZ","n":35,"r":0.0857,"pm":0.7879,"rm":0.2312,"mm":0.3478,"bb":0.0799,"bp":0.6075,"br":0.0955,"bm":0.154},{"f":"Topanga","y":2005,"st":"CA","n":33,"r":0.0,"pm":0.1466,"rm":0.0675,"mm":0.0456,"bb":0.0156,"bp":0.0253,"br":0.0046,"bm":0.0025},{"f":"Cameron Peak","y":2020,"st":"CO","n":30,"r":0.6667,"pm":0.6548,"rm":0.1651,"mm":0.2002,"bb":0.5184,"bp":0.322,"br":0.4671,"bm":0.4582}];
+  var pc=function(v){return v<0.1?(v*100).toFixed(1)+'%':Math.round(v*100)+'%'};
+  var b3=function(v){return v.toFixed(3)};
+  var PICK=['Thomas','Station','Fish','Dolan','Ferguson','Butte','Grand Prix - Old','Little Bear'];
+  // dot rows
+  var h='';
+  PICK.forEach(function(nm){
+    var r=FIRES.filter(function(x){return x.f===nm})[0]; if(!r)return;
+    var mk=function(c,v,t){return '<span class="mk '+c+'" style="left:'+(Math.min(v,1)*100)+'%" title="'+t+': '+pc(v)+'"></span>'};
+    h+='<div class="dotrow"><div class="lab"><b>'+r.f.replace(' - ','–')+'</b> '+r.y+' ('+r.st+') · '+r.n.toLocaleString()+' storms · <b>'+pc(r.r)+'</b> had debris flows</div><div class="dtrack">'
+      +mk('pub',r.pm,'Published M1 average forecast')+mk('rec',r.rm,'Rescaled M1 average forecast')+mk('ml',r.mm,'ML average forecast')+mk('act',r.r,'What happened')+'</div></div>';
+  });
+  document.getElementById('dots').innerHTML=h;
+  document.getElementById('dax').innerHTML=[0,25,50,75,100].map(function(t){return '<span style="left:'+t+'%">'+t+'%</span>'}).join('');
+  // table
+  var t='<thead><tr class="grp"><th></th><th></th><th></th><th></th><th colspan="3" class="n">Average forecast</th><th colspan="4" class="n">Brier score</th><th></th></tr>'
+    +'<tr><th>Fire</th><th class="n">Year</th><th class="n">Storms</th><th class="n">Happened</th><th class="n">Published</th><th class="n">Rescaled</th><th class="n">ML</th><th class="n">Guess</th><th class="n">Published</th><th class="n">Rescaled</th><th class="n">ML</th><th>Best</th></tr></thead><tbody>';
+  FIRES.forEach(function(r){
+    var m=Math.min(r.bp,r.br,r.bm),w=[];
+    if(r.bp<=m+0.0005)w.push('Published'); if(r.br<=m+0.0005)w.push('Rescaled'); if(r.bm<=m+0.0005)w.push('ML');
+    var cls=w.length===1&&w[0]==='Published'?'na':'ok';
+    var la=['Thomas','Station','Fish'].indexOf(r.f)>=0;
+    t+='<tr'+(la?' class="hl"':'')+'><td>'+r.f.replace(' - ','–')+' <span class="small">'+r.st+'</span></td><td class="n">'+r.y+'</td><td class="n">'+r.n.toLocaleString()+'</td><td class="n">'+pc(r.r)+'</td>'
+     +'<td class="n">'+pc(r.pm)+'</td><td class="n">'+pc(r.rm)+'</td><td class="n">'+pc(r.mm)+'</td><td class="n">'+b3(r.bb)+'</td><td class="n">'+b3(r.bp)+'</td><td class="n">'+b3(r.br)+'</td><td class="n">'+b3(r.bm)+'</td>'
+     +'<td class="best"><span class="tag '+cls+'">'+w.join(', ')+'</span></td></tr>';
+  });
+  document.getElementById('ftab').innerHTML=t+'</tbody>';
+  // tabs
+  var names={overall:'p-overall',fires:'p-fires'};
+  function show(k){
+    if(!names[k])k='overall';
+    Object.keys(names).forEach(function(n){
+      var on=n===k; document.getElementById(names[n]).hidden=!on;
+      document.getElementById('t-'+n).setAttribute('aria-selected',on?'true':'false'); document.getElementById('t-'+n).tabIndex=on?0:-1;
+    });
+  }
+  Object.keys(names).forEach(function(n){
+    var b=document.getElementById('t-'+n);
+    b.addEventListener('click',function(){show(n);try{history.replaceState(null,'','#'+n)}catch(e){try{location.hash=n}catch(e2){}}});
+    b.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var o=n==='overall'?'fires':'overall';show(o);document.getElementById('t-'+o).focus();}
+    });
+  });
+  show((location.hash||'').replace('#',''));
+  window.addEventListener('hashchange',function(){show((location.hash||'').replace('#',''))});
+})();
+</script>
