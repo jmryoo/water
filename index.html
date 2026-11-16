@@ -11,7 +11,8 @@ body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 20% -1
 main{max-width:720px;margin:0 auto;padding:80px 20px}
 h1{font-size:40px;letter-spacing:-.02em;margin:0 0 8px}
 .sub{color:var(--muted);margin:0 0 40px}
-.list{display:grid;gap:12px}
+.list{display:grid;gap:12px;margin-bottom:36px}
+h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
 .item{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--cardfg);border-color:#e2d6bd;text-decoration:none;transition:border-color .15s,transform .15s}
 .item:hover{border-color:var(--accent);background:#f8f1e3;transform:translateY(-1px)}
 h1::after{content:"";display:block;width:120px;height:3px;border-radius:2px;background:var(--accent);margin-top:14px}
@@ -25,15 +26,60 @@ h1::after{content:"";display:block;width:120px;height:3px;border-radius:2px;back
   <h1>iWater</h1>
   <p class="sub">Interactive research pages</p>
 
+  <h2>Seasonal outlook</h2>
   <div class="list">
     <a class="item" href="seasonal_outlook/enso_rwb_explorer_NMME.html">
       <div>
-        <b>ENSO RWB Explorer</b>
+        <b>Large-scale Condition &amp; ENSO Outlook</b>
         <span>ENSO, Rossby wave breaking &amp; West Coast winter rain</span>
       </div>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
   </div>
+
+  <h2>Post-fire debris flow</h2>
+  <div class="list">
+    <a class="item" href="postfire_debflow/Eaton%20Debris-Flow%20Probability_simple.html">
+      <div>
+        <b>Eaton Fire: Debris-Flow Probability</b>
+        <span>Debris-flow probability map, Eaton Fire burn area</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="item" href="postfire_debflow/Palisades%20Debris-Flow%20Probability_simple.html">
+      <div>
+        <b>Palisades Fire: Debris-Flow Probability</b>
+        <span>Debris-flow probability map, Palisades Fire burn area</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="item" href="postfire_debflow/Debris-Flow%20Model%20Evaluation.html">
+      <div>
+        <b>Debris-Flow Model Evaluation</b>
+        <span>USGS model vs. machine-learning models using NASA satellite data</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
+  <h2>Post-fire flood</h2>
+  <div class="list">
+    <a class="item" href="postfire_flood/dixie_flood_susceptibility_simple.html">
+      <div>
+        <b>Dixie Fire: Flood Susceptibility</b>
+        <span>Post-fire flood susceptibility, Dixie Fire burn area</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="item" href="postfire_flood/park_flood_susceptibility_simple.html">
+      <div>
+        <b>Park Fire: Flood Susceptibility</b>
+        <span>Post-fire flood susceptibility, Park Fire burn area</span>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
 </main>
 </body>
 </html>
