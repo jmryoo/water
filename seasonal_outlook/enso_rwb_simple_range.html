@@ -117,6 +117,12 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-si
 footer p{margin:4px 0}
 footer a{color:var(--jet)}
 .theme{position:fixed;top:12px;right:12px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}
+.hm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.hm{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.hm{grid-template-columns:1fr}}
+.hm h4{font-size:14px;margin:0 0 4px;text-align:center}
+.scale{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
+.scale .grad{width:180px;height:10px;border-radius:5px;background:linear-gradient(90deg,#a6611a,#dfc27d,#f2efe9,#80cdc1,#2e8b77)}
 </style>
 </head>
 <body>
@@ -190,6 +196,15 @@ footer a{color:var(--jet)}
         <span><i style="background:var(--faint);height:2px;width:22px"></i>Full range (6 models)</span>
       </div>
       <div class="note">Mean bias, NMME minus GPM IMERG (mm/day), in El Niño winters. November forecasts of Dec–Feb.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Comparison of NMME (2012–2019) with IMERG precipitation during ENSO</h2>
+    <div class="card">
+      <div class="hm" id="hm"></div>
+      <div class="scale"><span style="color:var(--dry);font-weight:600">too dry</span><span class="grad"></span><span style="color:var(--wet);font-weight:600">too wet</span><span id="scaleMax"></span></div>
+      <div class="note">Mean bias, NMME minus GPM IMERG (mm/day), Dec–Feb, November forecasts. n = winters in each phase. Hover a cell for details.</div>
     </div>
   </section>
 
@@ -360,6 +375,37 @@ document.getElementById('rpRows').innerHTML=NMB.map(([name,ens,ms])=>{
       <div class="ens" style="left:${pc(ens)}%;background:${col}"></div></div>
     <div class="rval"><b style="color:${col}">${sgn(ens)}</b><span>${sgn(lo)} to ${sgn(hi)}</span></div></div>`;}).join('');
 document.querySelectorAll('#rpRows .rplot').forEach(n=>hot(n,n.dataset.tip));
+
+/* ---------- NMME bias by ENSO phase, per model (mm/day): [El Niño, Neutral, La Niña] ---------- */
+const HM_REG=['PNW','Northern California','Southern California','Western US'];
+const HM_MOD=['GFDL','NCAR_CCSM4','NASA','CFSv2','CMC1','CMC2','ENSMEAN'];
+const HM_PH=[['El Niño','var(--warm)',4],['Neutral','var(--neutral)',3],['La Niña','var(--cold)',4]];
+const HM={
+ 'Northern California':{GFDL:[-0.04,-0.11,1.61],NCAR_CCSM4:[-0.02,-3.42,0.63],NASA:[-0.36,-0.57,2.53],CFSv2:[0.67,-0.44,1.14],CMC1:[-0.78,-0.33,1.65],CMC2:[-0.05,0.06,1.95],ENSMEAN:[-0.32,-0.22,1.57]},
+ 'Southern California':{GFDL:[0.63,-0.21,0.64],NCAR_CCSM4:[0.40,-2.09,0.83],NASA:[0.69,-0.20,0.93],CFSv2:[0.92,-0.20,0.04],CMC1:[0.17,-0.20,0.81],CMC2:[0.49,-0.14,0.78],ENSMEAN:[0.55,-0.18,0.59]},
+ 'PNW':{GFDL:[-0.79,0.19,0.40],NCAR_CCSM4:[-0.60,-0.30,-0.75],NASA:[-1.25,0.06,0.99],CFSv2:[-0.39,-0.04,0.59],CMC1:[-0.40,0.16,0.27],CMC2:[-0.90,0.31,0.29],ENSMEAN:[-0.77,0.18,0.53]},
+ 'Western US':{GFDL:[0.04,-0.05,0.22],NCAR_CCSM4:[-0.03,-0.92,0.03],NASA:[-0.10,-0.11,0.53],CFSv2:[0.19,-0.10,0.24],CMC1:[-0.12,-0.07,0.27],CMC2:[-0.02,-0.00,0.30],ENSMEAN:[-0.04,-0.05,0.29]}};
+function divColor(v,m){const t=Math.max(-1,Math.min(1,v/m));
+  const st=[[-1,[166,97,26]],[-0.5,[223,194,125]],[0,[242,239,233]],[0.5,[128,205,193]],[1,[46,139,119]]];
+  for(let i=0;i<st.length-1;i++){const [a,ca]=st[i],[b,cb]=st[i+1];if(t<=b){const u=(t-a)/(b-a);return `rgb(${ca.map((c,k)=>Math.round(c+(cb[k]-c)*u)).join(',')})`;}}}
+(function drawHeat(){const box=document.getElementById('hm');
+  const all=[];HM_REG.forEach(r=>HM_MOD.forEach(m=>HM[r][m].forEach(v=>all.push(Math.abs(v)))));all.sort((a,b)=>a-b);
+  const mx=all[Math.floor(0.95*(all.length-1))];
+  document.getElementById('scaleMax').textContent=`(saturates at ±${mx.toFixed(2)} mm/day)`;
+  const f=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+  HM_REG.forEach(r=>{const wrap=document.createElement('div');wrap.innerHTML=`<h4>${r}</h4>`;
+    const L=86,CW=56,RH=24,T=32,Wd=L+3*CW+4,Hd=T+HM_MOD.length*RH+4;
+    const sv=el('svg',{viewBox:`0 0 ${Wd} ${Hd}`},wrap);
+    HM_PH.forEach(([p,c,n],j)=>{const t=el('text',{x:L+j*CW+CW/2,y:13,'text-anchor':'middle',style:`font-size:11px;font-weight:700;fill:${c}`},sv);t.textContent=p;
+      const t2=el('text',{x:L+j*CW+CW/2,y:26,'text-anchor':'middle',style:'font-size:9.5px;fill:var(--faint)'},sv);t2.textContent=`n=${n}`;});
+    HM_MOD.forEach((m,i)=>{const y=T+i*RH,ens=m==='ENSMEAN';
+      const t=el('text',{x:L-6,y:y+RH/2+4,'text-anchor':'end',style:`font-size:10.5px;fill:var(--fg);font-weight:${ens?800:400}`},sv);t.textContent=ens?'Ens. mean':m;
+      HM_PH.forEach(([p],j)=>{const v=HM[r][m][j],x=L+j*CW,g=el('g',{},sv);
+        el('rect',{x:x+1,y:y+1,width:CW-2,height:RH-2,rx:3,style:`fill:${divColor(v,mx)}`},g);
+        const tt=el('text',{x:x+CW/2,y:y+RH/2+4,'text-anchor':'middle',style:`font-size:10.5px;font-weight:${ens?800:500};fill:${Math.abs(v)/mx>0.6?'#fff':'#222'}`},g);tt.textContent=f(v);
+        hot(g,`${r} · ${ens?'Ensemble mean':m} · ${p}: ${f(v)} mm/day (${v>0?'too wet':v<0?'too dry':'no bias'})`);});
+      if(ens)el('rect',{x:L,y:y,width:3*CW,height:RH,style:'fill:none;stroke:var(--fg);stroke-width:1.2','pointer-events':'none'},sv);});
+    box.appendChild(wrap);});})();
 })();
 </script>
 </body>
